@@ -342,6 +342,7 @@ main {
     display: flex;
     flex-grow: 1;
     overflow: hidden;
+    min-height: 0; /* allow main to shrink so the host console stays visible */
 }
 
 /* Sidebar */
@@ -614,6 +615,8 @@ main {
     color: var(--text-main);
     display: flex;
     flex-direction: column;
+    flex: 0 0 130px;       /* fix console height in the flex column */
+    overflow: hidden;      /* prevent console itself from overflowing */
 }
 
 .host-console-header {
@@ -628,4 +631,10 @@ main {
 .host-data-controls {
     display: flex;
     gap: 6px;
+}
+
+/* New: scrollable log inside fixed-height console */
+#host-console-log {
+    flex: 1;
+    overflow-y: auto;
 }
