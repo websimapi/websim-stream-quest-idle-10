@@ -33,7 +33,7 @@ export const ITEM_ICONS = {
     mysterious_orb: 'item_mysterious_orb.png',
     circuit_board: 'item_circuit_board.png',
     power_core: 'item_power_core.png',
-    broken_chip: 'item_broken_chip.png'
+    broken_chip: 'broken_chip.png'
 };
 
 export function renderInventory(inventoryListEl, playerData) {
@@ -62,9 +62,10 @@ export function renderInventory(inventoryListEl, playerData) {
         slot.className = 'inventory-item';
 
         const displayName = ITEM_NAMES[itemId] || itemId;
-        // Attach the name for the hover tooltip and accessibility
+        // Attach the name for accessibility and native hover tooltip
         slot.dataset.name = displayName;
         slot.setAttribute('aria-label', displayName);
+        slot.title = displayName;
 
         const iconPath = ITEM_ICONS[itemId] || '';
         if (iconPath) {
