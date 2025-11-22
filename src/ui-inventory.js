@@ -61,16 +61,21 @@ export function renderInventory(inventoryListEl, playerData) {
         const slot = document.createElement('div');
         slot.className = 'inventory-item';
 
+        const displayName = ITEM_NAMES[itemId] || itemId;
+        // Attach the name for the hover tooltip and accessibility
+        slot.dataset.name = displayName;
+        slot.setAttribute('aria-label', displayName);
+
         const iconPath = ITEM_ICONS[itemId] || '';
         if (iconPath) {
             const img = document.createElement('img');
             img.src = iconPath;
-            img.alt = ITEM_NAMES[itemId] || itemId;
+            img.alt = displayName;
             slot.appendChild(img);
         } else {
             // Fallback: show first letter if no icon found
             const span = document.createElement('span');
-            span.textContent = (ITEM_NAMES[itemId] || itemId).charAt(0).toUpperCase();
+            span.textContent = displayName.charAt(0).toUpperCase();
             slot.appendChild(span);
         }
 
