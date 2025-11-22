@@ -35,6 +35,7 @@ export function showSkillDetails(uiManager, skill) {
 
         const hasEnergy = state && computeEnergyCount(state) > 0;
         const isBusy = state && state.activeTask;
+        const isThisActive = isBusy && state.activeTask.taskId === task.id;
 
         card.innerHTML = `
                 <h4>${task.name}</h4>
@@ -43,16 +44,25 @@ export function showSkillDetails(uiManager, skill) {
             `;
 
         const btn = document.createElement('button');
-        btn.innerText = isBusy
-            ? (state.activeTask.taskId === task.id ? 'In Progress' : 'Busy')
-            : 'Start';
+        // Label logic: active task shows "In Progress", others show "Start"
+        btn.innerText = isThisActive ? 'In Progress' : 'Start';
 
-        if (isBusy || !hasEnergy) {
+        // Only disable when there is no energy at all; otherwise allow switching tasks
+        if (!hasEnergy && !isThisActive) {
             btn.disabled = true;
-            if (!hasEnergy && !isBusy) btn.innerText = 'No Energy';
+            btn.innerText = 'No Energy';
         }
 
         btn.onclick = () => {
+            // Do nothing if this task is already active
+            if (isThisActive) return;
+
+            // If another task is currently running, stop it first
+            if (isBusy && state.activeTask.taskId !== task.id) {
+                uiManager.network.stopTask();
+            }
+
+            // Start the requested task (host will validate energy)
             uiManager.network.startTask(task.id, task.duration);
         };
 
