@@ -1,16 +1,86 @@
 import { SKILLS } from './skills.js';
 
+// XP scaling parameters for skills
+const XP_BASE = 50;
+const XP_ALPHA = 1.75;
+const XP_BETA = 0.02;
+
+// XP needed for a single level (not cumulative)
+function xpForLevel(level) {
+    if (level <= 0) return 0;
+    return XP_BASE * Math.pow(level, XP_ALPHA) * (1 + level * XP_BETA);
+}
+
+// Given total accumulated XP, compute level and progress within current level
+function getLevelInfo(totalXp) {
+    let level = 1;
+    let xpRemaining = totalXp || 0;
+
+    // Subtract per-level requirements until we can't afford the next level
+    while (true) {
+        const req = xpForLevel(level);
+        if (xpRemaining >= req) {
+            xpRemaining -= req;
+            level++;
+        } else {
+            break;
+        }
+    }
+
+    const nextReq = xpForLevel(level) || 1;
+    const progress = Math.max(0, Math.min(1, xpRemaining / nextReq));
+
+    return {
+        level,
+        progress,
+        currentXpInLevel: xpRemaining,
+        xpForNextLevel: nextReq
+    };
+}
+
+// Sum total XP for a given skill from completion records
+function computeSkillXp(playerData, skillId) {
+    if (!playerData || !playerData.skills || !playerData.skills[skillId]) return 0;
+    const skillData = playerData.skills[skillId];
+    const tasks = skillData.tasks || {};
+    let total = 0;
+
+    Object.values(tasks).forEach(records => {
+        if (!Array.isArray(records)) return;
+        records.forEach(rec => {
+            if (rec && typeof rec.xp === 'number') {
+                total += rec.xp;
+            }
+        });
+    });
+
+    return total;
+}
+
 export function renderSkillsList(uiManager) {
-    const { skillsList } = uiManager;
+    const { skillsList, state } = uiManager;
     if (!skillsList) return;
 
     skillsList.innerHTML = '';
     Object.values(SKILLS).forEach(skill => {
         const div = document.createElement('div');
         div.className = 'skill-item';
+
+        const totalXp = computeSkillXp(state, skill.id);
+        const levelInfo = getLevelInfo(totalXp);
+        const progressPct = Math.round(levelInfo.progress * 100);
+
         div.innerHTML = `
                 <img src="${skill.icon}" alt="${skill.name}">
-                <span>${skill.name}</span>
+                <div class="skill-text">
+                    <div class="skill-name-row">
+                        <span class="skill-name">${skill.name}</span>
+                        <span class="skill-level-label">Lv ${levelInfo.level}</span>
+                    </div>
+                    <div class="skill-xp-bar">
+                        <div class="skill-xp-fill" style="width:${progressPct}%;"></div>
+                    </div>
+                </div>
             `;
         div.onclick = () => showSkillDetails(uiManager, skill);
         skillsList.appendChild(div);

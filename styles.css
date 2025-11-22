@@ -372,6 +372,54 @@ main {
 
 .skill-item img { width: 32px; height: 32px; }
 
+/* New skill text + level layout */
+.skill-text {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.skill-name-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.skill-name {
+    font-size: 0.9rem;
+}
+
+/* Level label to the right of the skill name */
+.skill-level-label {
+    font-size: 0.75rem;
+    color: var(--primary);
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+/* Progression bar below the skill label */
+.skill-xp-bar {
+    position: relative;
+    width: 100%;
+    height: 6px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.06);
+    overflow: hidden;
+}
+
+.skill-xp-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--accent), var(--primary));
+    transition: width 0.25s ease-out;
+}
+
+
 /* Content Area */
 .content-area {
     flex-grow: 1;
