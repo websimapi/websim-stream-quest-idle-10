@@ -99,6 +99,11 @@ export function showSkillDetails(uiManager, skill) {
     const grid = document.getElementById('task-grid');
     grid.innerHTML = '';
 
+    // Compute player's current level for this skill
+    const totalXp = computeSkillXp(state, skill.id);
+    const levelInfo = getLevelInfo(totalXp);
+    const playerLevel = levelInfo.level;
+
     skill.tasks.forEach(task => {
         const card = document.createElement('div');
         card.className = 'task-card';
@@ -106,33 +111,44 @@ export function showSkillDetails(uiManager, skill) {
         const hasEnergy = state && computeEnergyCount(state) > 0;
         const isBusy = state && state.activeTask;
         const isThisActive = isBusy && state.activeTask.taskId === task.id;
+        const requiredLevel = task.level || 1;
+        const hasRequiredLevel = playerLevel >= requiredLevel;
 
         card.innerHTML = `
                 <h4>${task.name}</h4>
                 <p>Time: ${task.duration / 1000}s</p>
                 <p>XP: ${task.xp}</p>
+                <p>Level Req: ${requiredLevel}</p>
             `;
 
         const btn = document.createElement('button');
-        // Label logic: active task shows "In Progress", others show "Start"
-        btn.innerText = isThisActive ? 'In Progress' : 'Start';
+        // Label logic: active task shows "In Progress", locked tasks show requirement, others show "Start"
+        if (isThisActive) {
+            btn.innerText = 'In Progress';
+        } else if (!hasRequiredLevel) {
+            btn.innerText = `Locked (Lv ${requiredLevel})`;
+        } else {
+            btn.innerText = 'Start';
+        }
 
-        // Only disable when there is no energy at all; otherwise allow switching tasks
-        if (!hasEnergy && !isThisActive) {
+        // Disable when no energy (and not already active) or level requirement not met
+        if ((!hasEnergy && !isThisActive) || !hasRequiredLevel) {
             btn.disabled = true;
-            btn.innerText = 'No Energy';
+            if (!hasEnergy && hasRequiredLevel && !isThisActive) {
+                btn.innerText = 'No Energy';
+            }
         }
 
         btn.onclick = () => {
-            // Do nothing if this task is already active
-            if (isThisActive) return;
+            // Do nothing if this task is already active or level is insufficient
+            if (isThisActive || !hasRequiredLevel) return;
 
             // If another task is currently running, stop it first
             if (isBusy && state.activeTask.taskId !== task.id) {
                 uiManager.network.stopTask();
             }
 
-            // Start the requested task (host will validate energy)
+            // Start the requested task (host will validate energy and level)
             uiManager.network.startTask(task.id, task.duration);
         };
 
